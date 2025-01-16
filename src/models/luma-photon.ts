@@ -1,10 +1,25 @@
-import { ImageModelV1CallWarning } from '@ai-sdk/provider';
-import { postJsonToApi } from '@ai-sdk/provider-utils';
-import { BaseModelHandler } from './base-model';
-import { LumaPhotonResponse, LumaPhotonAspectRatioSchema } from '../302ai-types';
-import { createJsonResponseHandler, statusCodeErrorResponseHandler } from '../utils/api-handlers';
+import type { ImageModelV1CallWarning } from "@ai-sdk/provider";
+import { postJsonToApi } from "@ai-sdk/provider-utils";
+import {
+  type LumaPhotonAspectRatio,
+  LumaPhotonAspectRatioSchema,
+  type LumaPhotonResponse,
+} from "../302ai-types";
+import {
+  createJsonResponseHandler,
+  statusCodeErrorResponseHandler,
+} from "../utils/api-handlers";
+import { BaseModelHandler } from "./base-model";
 
-const SUPPORTED_ASPECT_RATIOS = ['1:1', '3:4', '4:3', '9:16', '16:9', '9:21', '21:9'] as const;
+const SUPPORTED_ASPECT_RATIOS = [
+  "1:1",
+  "3:4",
+  "4:3",
+  "9:16",
+  "16:9",
+  "9:21",
+  "21:9",
+] as const;
 
 export class LumaPhotonHandler extends BaseModelHandler {
   protected async processRequest({
@@ -16,7 +31,7 @@ export class LumaPhotonHandler extends BaseModelHandler {
   }: {
     prompt: string;
     aspectRatio?: string;
-    providerOptions?: Record<string, any>;
+    providerOptions?: Record<string, unknown>;
     headers?: Record<string, string>;
     abortSignal?: AbortSignal;
   }): Promise<{
@@ -26,14 +41,17 @@ export class LumaPhotonHandler extends BaseModelHandler {
     const warnings: ImageModelV1CallWarning[] = [];
 
     // Validate aspect ratio
-    let finalAspectRatio = aspectRatio || '16:9';
-    if (aspectRatio && !SUPPORTED_ASPECT_RATIOS.includes(aspectRatio as any)) {
+    let finalAspectRatio = aspectRatio || "16:9";
+    if (
+      aspectRatio &&
+      !SUPPORTED_ASPECT_RATIOS.includes(aspectRatio as LumaPhotonAspectRatio)
+    ) {
       warnings.push({
-        type: 'unsupported-setting',
-        setting: 'aspectRatio',
-        details: `Unsupported aspect ratio: ${aspectRatio}. Using default 16:9. Supported values are: ${SUPPORTED_ASPECT_RATIOS.join(', ')}`,
+        type: "unsupported-setting",
+        setting: "aspectRatio",
+        details: `Unsupported aspect ratio: ${aspectRatio}. Using default 16:9. Supported values are: ${SUPPORTED_ASPECT_RATIOS.join(", ")}`,
       });
-      finalAspectRatio = '16:9';
+      finalAspectRatio = "16:9";
     }
 
     const requestHeaders = {
@@ -54,7 +72,7 @@ export class LumaPhotonHandler extends BaseModelHandler {
       fetch: this.fetch,
     });
 
-    const urls = response.images.map(img => img.url).filter(Boolean);
+    const urls = response.images.map((img) => img.url).filter(Boolean);
     const images = await this.downloadImages(urls);
 
     return {
@@ -62,4 +80,4 @@ export class LumaPhotonHandler extends BaseModelHandler {
       warnings,
     };
   }
-} 
+}

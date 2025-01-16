@@ -1,8 +1,11 @@
-import { ImageModelV1CallWarning } from '@ai-sdk/provider';
-import { postToApi } from '@ai-sdk/provider-utils';
-import { BaseModelHandler } from './base-model';
-import { AuraflowResponse } from '../302ai-types';
-import { createJsonResponseHandler, statusCodeErrorResponseHandler } from '../utils/api-handlers';
+import type { ImageModelV1CallWarning } from "@ai-sdk/provider";
+import { postToApi } from "@ai-sdk/provider-utils";
+import type { AuraflowResponse } from "../302ai-types";
+import {
+  createJsonResponseHandler,
+  statusCodeErrorResponseHandler,
+} from "../utils/api-handlers";
+import { BaseModelHandler } from "./base-model";
 
 export class AuraflowHandler extends BaseModelHandler {
   protected async processRequest({
@@ -25,14 +28,14 @@ export class AuraflowHandler extends BaseModelHandler {
     };
 
     const formData = new FormData();
-    formData.append('prompt', prompt);
+    formData.append("prompt", prompt);
 
     const { value: response } = await postToApi<AuraflowResponse>({
       url: `${this.settings.baseURL}/302/submit/aura-flow`,
       headers: requestHeaders,
       body: {
         content: formData,
-        values: { prompt }
+        values: { prompt },
       },
       failedResponseHandler: statusCodeErrorResponseHandler,
       successfulResponseHandler: createJsonResponseHandler(),
@@ -40,7 +43,7 @@ export class AuraflowHandler extends BaseModelHandler {
       fetch: this.fetch,
     });
 
-    const urls = response.images.map(img => img.url).filter(Boolean);
+    const urls = response.images.map((img) => img.url).filter(Boolean);
     const images = await this.downloadImages(urls);
 
     return {
@@ -48,4 +51,4 @@ export class AuraflowHandler extends BaseModelHandler {
       warnings,
     };
   }
-} 
+}

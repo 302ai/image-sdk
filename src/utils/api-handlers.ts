@@ -1,10 +1,11 @@
-import { APICallError } from '@ai-sdk/provider';
+import { APICallError } from "@ai-sdk/provider";
 import {
+  type ResponseHandler,
   extractResponseHeaders,
-  ResponseHandler,
-} from '@ai-sdk/provider-utils';
+} from "@ai-sdk/provider-utils";
 
-export const createJsonResponseHandler = <T>(): ResponseHandler<T> =>
+export const createJsonResponseHandler =
+  <T>(): ResponseHandler<T> =>
   async ({ response, url, requestBodyValues }) => {
     const responseHeaders = extractResponseHeaders(response);
     const responseBody = await response.json();
@@ -14,11 +15,9 @@ export const createJsonResponseHandler = <T>(): ResponseHandler<T> =>
     };
   };
 
-export const statusCodeErrorResponseHandler: ResponseHandler<APICallError> = async ({
-  response,
-  url,
-  requestBodyValues,
-}) => {
+export const statusCodeErrorResponseHandler: ResponseHandler<
+  APICallError
+> = async ({ response, url, requestBodyValues }) => {
   const responseHeaders = extractResponseHeaders(response);
   const responseBody = await response.text();
 
@@ -33,4 +32,4 @@ export const statusCodeErrorResponseHandler: ResponseHandler<APICallError> = asy
       responseBody,
     }),
   };
-}; 
+};

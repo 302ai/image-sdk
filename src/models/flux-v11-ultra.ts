@@ -1,8 +1,11 @@
-import { ImageModelV1CallWarning } from '@ai-sdk/provider';
-import { postJsonToApi } from '@ai-sdk/provider-utils';
-import { BaseModelHandler } from './base-model';
-import { FluxV11UltraResponse } from '../302ai-types';
-import { createJsonResponseHandler, statusCodeErrorResponseHandler } from '../utils/api-handlers';
+import type { ImageModelV1CallWarning } from "@ai-sdk/provider";
+import { postJsonToApi } from "@ai-sdk/provider-utils";
+import type { FluxV11UltraResponse } from "../302ai-types";
+import {
+  createJsonResponseHandler,
+  statusCodeErrorResponseHandler,
+} from "../utils/api-handlers";
+import { BaseModelHandler } from "./base-model";
 
 export class FluxV11UltraHandler extends BaseModelHandler {
   protected async processRequest({
@@ -14,7 +17,7 @@ export class FluxV11UltraHandler extends BaseModelHandler {
   }: {
     prompt: string;
     aspectRatio?: string;
-    providerOptions?: Record<string, any>;
+    providerOptions?: Record<string, unknown>;
     headers?: Record<string, string>;
     abortSignal?: AbortSignal;
   }): Promise<{
@@ -30,10 +33,10 @@ export class FluxV11UltraHandler extends BaseModelHandler {
       url: `${this.settings.baseURL}/302/submit/flux-v1.1-ultra`,
       headers: requestHeaders,
       body: {
-        aspect_ratio: aspectRatio || '1:1',
+        aspect_ratio: aspectRatio || "1:1",
         prompt,
         raw: false,
-        ...(providerOptions?.['302ai'] ?? {}),
+        ...(providerOptions?.["302ai"] ?? {}),
       },
       failedResponseHandler: statusCodeErrorResponseHandler,
       successfulResponseHandler: createJsonResponseHandler(),
@@ -41,7 +44,7 @@ export class FluxV11UltraHandler extends BaseModelHandler {
       fetch: this.fetch,
     });
 
-    const urls = response.images.map(img => img.url || '').filter(Boolean);
+    const urls = response.images.map((img) => img.url || "").filter(Boolean);
     const images = await this.downloadImages(urls);
 
     return {
@@ -49,4 +52,4 @@ export class FluxV11UltraHandler extends BaseModelHandler {
       warnings: [],
     };
   }
-} 
+}

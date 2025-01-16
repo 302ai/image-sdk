@@ -1,8 +1,16 @@
-import { ImageModelV1CallWarning } from '@ai-sdk/provider';
-import { postJsonToApi } from '@ai-sdk/provider-utils';
-import { BaseModelHandler } from './base-model';
-import { FluxSchnellResponse } from '../302ai-types';
-import { createJsonResponseHandler, statusCodeErrorResponseHandler } from '../utils/api-handlers';
+import type { ImageModelV1CallWarning } from "@ai-sdk/provider";
+import { postJsonToApi } from "@ai-sdk/provider-utils";
+import type { FluxSchnellResponse } from "../302ai-types";
+import {
+  createJsonResponseHandler,
+  statusCodeErrorResponseHandler,
+} from "../utils/api-handlers";
+import { BaseModelHandler } from "./base-model";
+
+interface Provider302AIOptions {
+  guidance_scale?: number;
+  num_inference_steps?: number;
+}
 
 export class FluxSchnellHandler extends BaseModelHandler {
   protected async processRequest({
@@ -16,14 +24,18 @@ export class FluxSchnellHandler extends BaseModelHandler {
     prompt: string;
     size?: string;
     aspectRatio?: string;
-    providerOptions?: Record<string, any>;
+    providerOptions?: {
+      "302ai"?: Provider302AIOptions;
+      [key: string]: unknown;
+    };
     headers?: Record<string, string>;
     abortSignal?: AbortSignal;
   }): Promise<{
     images: string[];
     warnings: ImageModelV1CallWarning[];
   }> {
-    let parsedSize = this.parseSize(size) || this.aspectRatioToSize(aspectRatio);
+    let parsedSize =
+      this.parseSize(size) || this.aspectRatioToSize(aspectRatio);
     if (!parsedSize) {
       parsedSize = { width: 1024, height: 1024 };
     }
@@ -38,7 +50,7 @@ export class FluxSchnellHandler extends BaseModelHandler {
       headers: requestHeaders,
       body: {
         image_size: parsedSize,
-        num_inference_steps: providerOptions?.['302ai']?.num_inference_steps,
+        num_inference_steps: providerOptions?.["302ai"]?.num_inference_steps,
         prompt,
       },
       failedResponseHandler: statusCodeErrorResponseHandler,
@@ -47,7 +59,7 @@ export class FluxSchnellHandler extends BaseModelHandler {
       fetch: this.fetch,
     });
 
-    const urls = response.images.map(img => img.url).filter(Boolean);
+    const urls = response.images.map((img) => img.url).filter(Boolean);
     const images = await this.downloadImages(urls);
 
     return {
@@ -55,4 +67,4 @@ export class FluxSchnellHandler extends BaseModelHandler {
       warnings: [],
     };
   }
-} 
+}

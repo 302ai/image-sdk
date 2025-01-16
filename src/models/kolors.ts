@@ -1,8 +1,16 @@
-import { ImageModelV1CallWarning } from '@ai-sdk/provider';
-import { postJsonToApi } from '@ai-sdk/provider-utils';
-import { BaseModelHandler } from './base-model';
-import { KolorsResponse } from '../302ai-types';
-import { createJsonResponseHandler, statusCodeErrorResponseHandler } from '../utils/api-handlers';
+import type { ImageModelV1CallWarning } from "@ai-sdk/provider";
+import { postJsonToApi } from "@ai-sdk/provider-utils";
+import type { KolorsResponse } from "../302ai-types";
+import {
+  createJsonResponseHandler,
+  statusCodeErrorResponseHandler,
+} from "../utils/api-handlers";
+import { BaseModelHandler } from "./base-model";
+
+interface Provider302AIOptions {
+  negative_prompt: string;
+  guidance_scale: number;
+}
 
 export class KolorsHandler extends BaseModelHandler {
   protected async processRequest({
@@ -16,7 +24,10 @@ export class KolorsHandler extends BaseModelHandler {
     prompt: string;
     size?: string;
     aspectRatio?: string;
-    providerOptions?: Record<string, any>;
+    providerOptions?: {
+      "302ai"?: Provider302AIOptions;
+      [key: string]: unknown;
+    };
     headers?: Record<string, string>;
     abortSignal?: AbortSignal;
   }): Promise<{
@@ -24,8 +35,9 @@ export class KolorsHandler extends BaseModelHandler {
     warnings: ImageModelV1CallWarning[];
   }> {
     const warnings: ImageModelV1CallWarning[] = [];
-    
-    let parsedSize = this.parseSize(size) || this.aspectRatioToSize(aspectRatio);
+
+    let parsedSize =
+      this.parseSize(size) || this.aspectRatioToSize(aspectRatio);
     if (!parsedSize) {
       parsedSize = { width: 1024, height: 1024 };
     }
@@ -41,8 +53,8 @@ export class KolorsHandler extends BaseModelHandler {
       body: {
         prompt,
         image_size: parsedSize,
-        negative_prompt: providerOptions?.['302ai']?.negative_prompt,
-        guidance_scale: providerOptions?.['302ai']?.guidance_scale || 5,
+        negative_prompt: providerOptions?.["302ai"]?.negative_prompt,
+        guidance_scale: providerOptions?.["302ai"]?.guidance_scale || 5,
       },
       failedResponseHandler: statusCodeErrorResponseHandler,
       successfulResponseHandler: createJsonResponseHandler(),
@@ -50,7 +62,7 @@ export class KolorsHandler extends BaseModelHandler {
       fetch: this.fetch,
     });
 
-    const urls = response.images.map(img => img.url).filter(Boolean);
+    const urls = response.images.map((img) => img.url).filter(Boolean);
     const images = await this.downloadImages(urls);
 
     return {
@@ -58,4 +70,4 @@ export class KolorsHandler extends BaseModelHandler {
       warnings,
     };
   }
-} 
+}

@@ -1,8 +1,11 @@
-import { ImageModelV1CallWarning } from '@ai-sdk/provider';
-import { postJsonToApi } from '@ai-sdk/provider-utils';
-import { BaseModelHandler } from './base-model';
-import { DallEResponse } from '../302ai-types';
-import { createJsonResponseHandler, statusCodeErrorResponseHandler } from '../utils/api-handlers';
+import type { ImageModelV1CallWarning } from "@ai-sdk/provider";
+import { postJsonToApi } from "@ai-sdk/provider-utils";
+import type { DallEResponse } from "../302ai-types";
+import {
+  createJsonResponseHandler,
+  statusCodeErrorResponseHandler,
+} from "../utils/api-handlers";
+import { BaseModelHandler } from "./base-model";
 
 export class DallEHandler extends BaseModelHandler {
   protected async processRequest({
@@ -16,7 +19,7 @@ export class DallEHandler extends BaseModelHandler {
     prompt: string;
     size?: string;
     aspectRatio?: string;
-    providerOptions?: Record<string, any>;
+    providerOptions?: Record<string, unknown>;
     headers?: Record<string, string>;
     abortSignal?: AbortSignal;
   }): Promise<{
@@ -24,8 +27,9 @@ export class DallEHandler extends BaseModelHandler {
     warnings: ImageModelV1CallWarning[];
   }> {
     const warnings: ImageModelV1CallWarning[] = [];
-    
-    let parsedSize = this.parseSize(size) || this.aspectRatioToSize(aspectRatio);
+
+    let parsedSize =
+      this.parseSize(size) || this.aspectRatioToSize(aspectRatio);
     if (!parsedSize) {
       parsedSize = { width: 1024, height: 1024 };
     }
@@ -49,7 +53,7 @@ export class DallEHandler extends BaseModelHandler {
       fetch: this.fetch,
     });
 
-    const urls = response.data.map(img => img.url).filter(Boolean);
+    const urls = response.data.map((img) => img.url).filter(Boolean);
     const images = await this.downloadImages(urls);
 
     return {
@@ -57,4 +61,4 @@ export class DallEHandler extends BaseModelHandler {
       warnings,
     };
   }
-} 
+}

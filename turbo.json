@@ -1,12 +1,20 @@
 {
-  "extends": [
-    "//"
-  ],
+  "$schema": "https://turborepo.org/schema.json",
   "tasks": {
     "build": {
-      "outputs": [
-        "**/dist/**"
-      ]
+      "outputs": ["dist/**"],
+      "inputs": ["src/**", "package.json", "tsup.config.ts"],
+      "env": ["NODE_ENV", "NPM_TOKEN"]
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "inputs": ["src/**", "test/**", "vitest.*.config.js"]
+    },
+    "lint": {
+      "inputs": ["src/**"]
+    },
+    "type-check": {
+      "inputs": ["src/**", "tsconfig.json"]
     }
   }
 }

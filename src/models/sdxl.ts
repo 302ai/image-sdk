@@ -1,8 +1,17 @@
-import { ImageModelV1CallWarning } from '@ai-sdk/provider';
-import { postToApi } from '@ai-sdk/provider-utils';
-import { BaseModelHandler } from './base-model';
-import { SDXLResponse } from '../302ai-types';
-import { createJsonResponseHandler, statusCodeErrorResponseHandler } from '../utils/api-handlers';
+import type { ImageModelV1CallWarning } from "@ai-sdk/provider";
+import { postToApi } from "@ai-sdk/provider-utils";
+import type { SDXLResponse } from "../302ai-types";
+import {
+  createJsonResponseHandler,
+  statusCodeErrorResponseHandler,
+} from "../utils/api-handlers";
+import { BaseModelHandler } from "./base-model";
+
+interface Provider302AIOptions {
+  negative_prompt?: string;
+  output_format?: string;
+  seed?: number;
+}
 
 export class SDXLHandler extends BaseModelHandler {
   protected async processRequest({
@@ -16,7 +25,10 @@ export class SDXLHandler extends BaseModelHandler {
     prompt: string;
     size?: string;
     aspectRatio?: string;
-    providerOptions?: Record<string, any>;
+    providerOptions?: {
+      "302ai"?: Provider302AIOptions;
+      [key: string]: unknown;
+    };
     headers?: Record<string, string>;
     abortSignal?: AbortSignal;
   }): Promise<{
@@ -24,8 +36,9 @@ export class SDXLHandler extends BaseModelHandler {
     warnings: ImageModelV1CallWarning[];
   }> {
     const warnings: ImageModelV1CallWarning[] = [];
-    
-    let parsedSize = this.parseSize(size) || this.aspectRatioToSize(aspectRatio);
+
+    let parsedSize =
+      this.parseSize(size) || this.aspectRatioToSize(aspectRatio);
     if (!parsedSize) {
       parsedSize = { width: 1024, height: 1024 };
     }
@@ -36,12 +49,15 @@ export class SDXLHandler extends BaseModelHandler {
     };
 
     const formData = new FormData();
-    formData.append('prompt', prompt);
-    formData.append('width', parsedSize.width.toString());
-    formData.append('height', parsedSize.height.toString());
+    formData.append("prompt", prompt);
+    formData.append("width", parsedSize.width.toString());
+    formData.append("height", parsedSize.height.toString());
 
-    if (providerOptions?.['302ai']?.negative_prompt) {
-      formData.append('negative_prompt', providerOptions['302ai'].negative_prompt);
+    if (providerOptions?.["302ai"]?.negative_prompt) {
+      formData.append(
+        "negative_prompt",
+        providerOptions["302ai"].negative_prompt,
+      );
     }
 
     const { value: response } = await postToApi<SDXLResponse>({
@@ -53,8 +69,8 @@ export class SDXLHandler extends BaseModelHandler {
           prompt,
           width: parsedSize.width.toString(),
           height: parsedSize.height.toString(),
-          negative_prompt: providerOptions?.['302ai']?.negative_prompt,
-        }
+          negative_prompt: providerOptions?.["302ai"]?.negative_prompt,
+        },
       },
       failedResponseHandler: statusCodeErrorResponseHandler,
       successfulResponseHandler: createJsonResponseHandler(),
@@ -62,8 +78,10 @@ export class SDXLHandler extends BaseModelHandler {
       fetch: this.fetch,
     });
 
-    if (response.status === 'failed' || response.error) {
-      throw new Error(`SDXL generation failed: ${response.error || 'Unknown error'}`);
+    if (response.status === "failed" || response.error) {
+      throw new Error(
+        `SDXL generation failed: ${response.error || "Unknown error"}`,
+      );
     }
 
     // Parse the output string which contains the URLs array
@@ -75,4 +93,4 @@ export class SDXLHandler extends BaseModelHandler {
       warnings,
     };
   }
-} 
+}

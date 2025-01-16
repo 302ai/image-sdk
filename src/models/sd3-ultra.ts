@@ -1,10 +1,29 @@
-import { ImageModelV1CallWarning } from '@ai-sdk/provider';
-import { postToApi } from '@ai-sdk/provider-utils';
-import { BaseModelHandler } from './base-model';
-import { SD3UltraAspectRatioSchema } from '../302ai-types';
-import { statusCodeErrorResponseHandler } from '../utils/api-handlers';
+import type { ImageModelV1CallWarning } from "@ai-sdk/provider";
+import { postToApi } from "@ai-sdk/provider-utils";
+import {
+  type SD3UltraAspectRatio,
+  SD3UltraAspectRatioSchema,
+} from "../302ai-types";
+import { statusCodeErrorResponseHandler } from "../utils/api-handlers";
+import { BaseModelHandler } from "./base-model";
 
-const SUPPORTED_ASPECT_RATIOS = ['16:9', '1:1', '21:9', '2:3', '3:2', '4:5', '5:4', '9:16', '9:21'] as const;
+const SUPPORTED_ASPECT_RATIOS = [
+  "16:9",
+  "1:1",
+  "21:9",
+  "2:3",
+  "3:2",
+  "4:5",
+  "5:4",
+  "9:16",
+  "9:21",
+] as const;
+
+interface Provider302AIOptions {
+  negative_prompt?: string;
+  output_format?: string;
+  seed?: number;
+}
 
 export class SD3UltraHandler extends BaseModelHandler {
   protected async processRequest({
@@ -16,7 +35,10 @@ export class SD3UltraHandler extends BaseModelHandler {
   }: {
     prompt: string;
     aspectRatio?: string;
-    providerOptions?: Record<string, any>;
+    providerOptions?: {
+      "302ai"?: Provider302AIOptions;
+      [key: string]: unknown;
+    };
     headers?: Record<string, string>;
     abortSignal?: AbortSignal;
   }): Promise<{
@@ -26,34 +48,40 @@ export class SD3UltraHandler extends BaseModelHandler {
     const warnings: ImageModelV1CallWarning[] = [];
 
     // Validate aspect ratio
-    let finalAspectRatio = aspectRatio || '1:1';
-    if (aspectRatio && !SUPPORTED_ASPECT_RATIOS.includes(aspectRatio as any)) {
+    let finalAspectRatio = aspectRatio || "1:1";
+    if (
+      aspectRatio &&
+      !SUPPORTED_ASPECT_RATIOS.includes(aspectRatio as SD3UltraAspectRatio)
+    ) {
       warnings.push({
-        type: 'unsupported-setting',
-        setting: 'aspectRatio',
-        details: `Unsupported aspect ratio: ${aspectRatio}. Using default 1:1. Supported values are: ${SUPPORTED_ASPECT_RATIOS.join(', ')}`,
+        type: "unsupported-setting",
+        setting: "aspectRatio",
+        details: `Unsupported aspect ratio: ${aspectRatio}. Using default 1:1. Supported values are: ${SUPPORTED_ASPECT_RATIOS.join(", ")}`,
       });
-      finalAspectRatio = '1:1';
+      finalAspectRatio = "1:1";
     }
 
     const requestHeaders = {
       Authorization: this.settings.apiKey,
-      Accept: 'image/*',
+      Accept: "image/*",
       ...headers,
     };
 
     const formData = new FormData();
-    formData.append('prompt', prompt);
-    formData.append('aspect_ratio', finalAspectRatio);
+    formData.append("prompt", prompt);
+    formData.append("aspect_ratio", finalAspectRatio);
 
-    if (providerOptions?.['302ai']?.negative_prompt) {
-      formData.append('negative_prompt', providerOptions['302ai'].negative_prompt);
+    if (providerOptions?.["302ai"]?.negative_prompt) {
+      formData.append(
+        "negative_prompt",
+        providerOptions["302ai"].negative_prompt,
+      );
     }
-    if (providerOptions?.['302ai']?.output_format) {
-      formData.append('output_format', providerOptions['302ai'].output_format);
+    if (providerOptions?.["302ai"]?.output_format) {
+      formData.append("output_format", providerOptions["302ai"].output_format);
     }
-    if (providerOptions?.['302ai']?.seed) {
-      formData.append('seed', providerOptions['302ai'].seed.toString());
+    if (providerOptions?.["302ai"]?.seed) {
+      formData.append("seed", providerOptions["302ai"].seed.toString());
     }
 
     const { value: response } = await postToApi<ArrayBuffer>({
@@ -64,10 +92,10 @@ export class SD3UltraHandler extends BaseModelHandler {
         values: {
           prompt,
           aspect_ratio: finalAspectRatio,
-          negative_prompt: providerOptions?.['302ai']?.negative_prompt,
-          output_format: providerOptions?.['302ai']?.output_format,
-          seed: providerOptions?.['302ai']?.seed,
-        }
+          negative_prompt: providerOptions?.["302ai"]?.negative_prompt,
+          output_format: providerOptions?.["302ai"]?.output_format,
+          seed: providerOptions?.["302ai"]?.seed,
+        },
       },
       failedResponseHandler: statusCodeErrorResponseHandler,
       successfulResponseHandler: async ({ response }) => {
@@ -79,11 +107,11 @@ export class SD3UltraHandler extends BaseModelHandler {
     });
 
     // Convert the binary response to base64
-    const base64 = Buffer.from(response).toString('base64');
+    const base64 = Buffer.from(response).toString("base64");
 
     return {
       images: [base64],
       warnings,
     };
   }
-} 
+}
